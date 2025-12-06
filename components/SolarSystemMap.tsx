@@ -12,6 +12,7 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+  const [showConstellations, setShowConstellations] = useState(false);
 
   // Generate random starting positions (delays) once on mount to avoid re-randomizing on render
   const planetDelays = useMemo(() => {
@@ -70,6 +71,44 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
     }
     return asteroids;
   }, []);
+
+  // Constellation Data
+  const constellations = useMemo(() => [
+    {
+      name: 'Orion (猎户座)',
+      paths: [
+        // The Belt
+        [[-600, 100], [-580, 110], [-560, 120]],
+        // Body (Shoulders to Knees)
+        [[-620, 50], [-600, 100], [-630, 200]], // Left side
+        [[-540, 60], [-560, 120], [-530, 210]], // Right side
+        // Shield/Bow
+        [[-500, 80], [-480, 100], [-480, 140]]
+      ]
+    },
+    {
+      name: 'Ursa Major (大熊座/北斗)',
+      paths: [
+        // The Big Dipper part
+        [[-400, -500], [-450, -480], [-500, -500], [-530, -550], [-530, -600], [-480, -600], [-480, -550]]
+      ]
+    },
+    {
+      name: 'Cassiopeia (仙后座)',
+      paths: [
+        // The W shape
+        [[400, -500], [430, -450], [460, -480], [490, -420], [520, -460]]
+      ]
+    },
+    {
+      name: 'Cygnus (天鹅座)',
+      paths: [
+        // The Cross
+        [[500, 400], [550, 450], [600, 500], [650, 550]], // Main body
+        [[520, 520], [600, 500], [680, 480]] // Wings
+      ]
+    }
+  ], []);
 
   const handleWheel = (e: React.WheelEvent) => {
     // e.stopPropagation(); // Removed to allow document scroll if needed, or keep if fullscreen
@@ -197,6 +236,48 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` 
         }}
       >
+        {/* Constellations Layer */}
+        {showConstellations && (
+            <div className="absolute top-0 left-0 w-0 h-0 overflow-visible z-0 pointer-events-none">
+                <svg className="overflow-visible opacity-50">
+                    <defs>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    {constellations.map((constellation, idx) => (
+                        <g key={idx}>
+                            {constellation.paths.map((path, pathIdx) => (
+                                <polyline 
+                                    key={pathIdx}
+                                    points={path.map(p => p.join(',')).join(' ')}
+                                    fill="none"
+                                    stroke="white"
+                                    strokeWidth="1"
+                                    strokeDasharray="4 2"
+                                    strokeOpacity="0.4"
+                                />
+                            ))}
+                            {constellation.paths.flat().map((point, pIdx) => (
+                                <circle 
+                                    key={pIdx}
+                                    cx={point[0]} 
+                                    cy={point[1]} 
+                                    r="2" 
+                                    fill="white"
+                                    filter="url(#glow)"
+                                />
+                            ))}
+                        </g>
+                    ))}
+                </svg>
+            </div>
+        )}
+
         {/* Asteroid Belt */}
         <div className="absolute top-0 left-0 animate-[spin_120s_linear_infinite]">
              {asteroidBelt.map((ast) => (
@@ -214,8 +295,38 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
              ))}
         </div>
 
+        {/* Inner System Comet Orbit Path */}
+        <div 
+             className="absolute top-0 left-0 rounded-full border-[0.5px] border-dashed border-cyan-100/10 pointer-events-none"
+             style={{
+                 width: '240px',
+                 height: '240px',
+                 transform: 'translate(-50%, -50%)',
+                 zIndex: 4
+             }}
+        ></div>
+
+        {/* Inner System Comet - Between Mercury (100) and Venus (140) at radius ~120 */}
+        <div className="absolute top-0 left-0 animate-[orbit_16s_linear_infinite]" style={{ zIndex: 5 }}>
+             <div 
+                className="absolute top-0 left-0"
+                style={{ transform: 'translateY(-120px)' }}
+             >
+                <div className="relative flex items-center justify-center">
+                    {/* Tail: Gradient fading from head (white/cyan) to transparent, pointing left (behind clockwise motion) */}
+                    <div 
+                      className="absolute right-0 w-24 h-1 bg-gradient-to-l from-cyan-100/80 to-transparent origin-right rounded-full blur-[1px]"
+                      style={{ transform: 'rotate(15deg) translateX(-4px)' }} 
+                    ></div>
+                    {/* Head */}
+                    <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_#fff,0_0_15px_#22d3ee] relative z-10"></div>
+                </div>
+             </div>
+        </div>
+
         {SOLAR_SYSTEM_DATA.map((planet) => {
           const isSun = planet.id === 'sun';
+          const isPluto = planet.id === 'pluto';
           const isSelected = selectedPlanetId === planet.id;
           const hasTrail = ['mars', 'jupiter'].includes(planet.id);
           const trailColor = planet.id === 'mars' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(217, 119, 6, 0.5)';
@@ -229,6 +340,8 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
                   style={{
                     width: `${planet.orbitScale * 2}px`,
                     height: `${planet.orbitScale * 2}px`,
+                    // Simulate inclined orbit for Pluto by rotating the orbit container
+                    transform: `translate(-50%, -50%) ${isPluto ? 'rotate3d(1, 0, 0, 70deg)' : ''}`
                   }}
                 >
                    {/* Animated Dashed Ring */}
@@ -251,6 +364,8 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
                   // Use negative delay to start at random position along the orbit.
                   animationDuration: isSun ? '0s' : `${planet.orbitSpeed}s`,
                   animationDelay: isSun ? '0s' : `${planetDelays[planet.id] || 0}s`,
+                  // Apply same tilt to the rotator if it's Pluto, but we need to counter it later or just tilt the whole plane
+                  transform: isPluto ? 'rotate3d(1, 0, 0, 70deg)' : undefined
                 }}
               >
                 
@@ -295,6 +410,8 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
                        style={{ 
                          animation: isSun ? 'none' : `orbit ${planet.orbitSpeed}s linear infinite reverse`,
                          animationDelay: isSun ? '0s' : `${planetDelays[planet.id] || 0}s`,
+                         // If Pluto, we also need to un-tilt the planet body so it looks spherical, not flat
+                         transform: isPluto ? 'rotate3d(1, 0, 0, -70deg)' : undefined
                        }}
                     >
                         {/* 
@@ -310,6 +427,46 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
                         >
                              {/* The main planet sphere with rotation */}
                              <div className={`w-full h-full rounded-full ${planet.color} ${!isSun ? 'animate-spin-very-slow' : ''}`}></div>
+                            
+                             {/* Earth's Moon - FIX: Using separate container for orbit to avoid transform conflict */}
+                             {planet.id === 'earth' && (
+                                <div 
+                                    className="absolute pointer-events-none"
+                                    style={{
+                                        top: '50%',
+                                        left: '50%',
+                                        width: '350%', 
+                                        height: '350%',
+                                        // This wrapper handles the positioning (centering)
+                                        transform: 'translate(-50%, -50%)',
+                                    }}
+                                >
+                                    {/* This inner div handles the rotation (animation) */}
+                                    <div className="w-full h-full animate-[spin_6s_linear_infinite]">
+                                        {/* Faint orbit path */}
+                                        <div className="absolute inset-0 rounded-full border border-white/10 opacity-40"></div>
+                                        
+                                        {/* Moon Body Container (Positioned on the ring) */}
+                                        <div 
+                                            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                                            style={{
+                                                width: '10%',
+                                                height: '10%',
+                                            }}
+                                        >
+                                            <div 
+                                                className="w-full h-full rounded-full shadow-[inset_-2px_-2px_4px_rgba(0,0,0,0.9)] bg-gray-300"
+                                                style={{
+                                                    minWidth: '4px',
+                                                    minHeight: '4px',
+                                                    background: 'radial-gradient(circle at 35% 35%, #f3f4f6 0%, #9ca3af 40%, #4b5563 80%, #111827 100%)',
+                                                    boxShadow: '0 0 6px 1px rgba(255, 255, 255, 0.3)'
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                             )}
 
                              {/* Selection Ring - separated from rotation to avoid wobble */}
                              {isSelected && (
@@ -354,6 +511,20 @@ const SolarSystemMap: React.FC<SolarSystemMapProps> = ({ onSelectPlanet, selecte
             </div>
           );
         })}
+      </div>
+
+      {/* Top Right Controls */}
+      <div className="absolute top-6 right-6 z-20 flex gap-2">
+         <button 
+           onClick={() => setShowConstellations(!showConstellations)}
+           className={`px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-xs md:text-sm font-semibold flex items-center gap-2
+             ${showConstellations 
+               ? 'bg-blue-500/30 border-blue-400 text-blue-200 shadow-[0_0_10px_rgba(59,130,246,0.3)]' 
+               : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10'}`}
+         >
+           <span>✨</span>
+           <span className="hidden md:inline">星座连线</span>
+         </button>
       </div>
 
       <div className="absolute bottom-6 left-6 text-white/40 text-xs md:text-sm bg-black/20 backdrop-blur-md px-4 py-2 rounded-lg pointer-events-none select-none border border-white/5 z-20">

@@ -186,4 +186,24 @@ export const SOLAR_SYSTEM_DATA: PlanetData[] = [
     orbitSpeed: 180,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg/440px-Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg'
   },
+  {
+    id: 'pluto',
+    name: '冥王星',
+    enName: 'Pluto',
+    description: '曾经的第九大行星，现在被归类为矮行星。它位于柯伊伯带，是一个寒冷的冰岩世界，有着偏心率极高的倾斜轨道。',
+    details: {
+      diameter: '2,377 km',
+      distanceFromSun: '5,906,000,000 km',
+      orbitalPeriod: '248 年',
+      dayLength: '153 小时',
+      temperature: '-229°C',
+      moons: 5,
+    },
+    // Realistic: Off-white/brownish beige
+    color: 'bg-[radial-gradient(circle_at_30%_30%,_#e7e5e4_0%,_#d6d3d1_40%,_#a8a29e_100%)] shadow-inner',
+    sizeScale: 10,
+    orbitScale: 720, // Farther out
+    orbitSpeed: 248, // Very slow
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_in_True_Color_-_High-Res.jpg/440px-Pluto_in_True_Color_-_High-Res.jpg'
+  }
 ];
