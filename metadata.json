@@ -1,0 +1,5 @@
+{
+  "name": "Interactive Solar System Explorer",
+  "description": "An interactive, educational 3D-like visualization of the Solar System. Features clickable planets, detailed information, and an AI-powered guide to answer astronomical questions.",
+  "requestFramePermissions": []
+}

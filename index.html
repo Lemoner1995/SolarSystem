@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar System Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              space: {
+                900: '#0B0D17',
+                800: '#151932',
+                700: '#232946',
+              },
+              accent: '#38bdf8'
+            },
+            animation: {
+              'spin-slow': 'spin 20s linear infinite',
+              'spin-very-slow': 'spin 60s linear infinite',
+              'orbit': 'orbit 10s linear infinite',
+              'nebula': 'nebula 240s linear infinite alternate',
+              'twinkle': 'twinkle 3s ease-in-out infinite', // Standard blink
+              'twinkle-slow': 'twinkle 5s ease-in-out infinite', // Slower blink
+              'twinkle-fast': 'twinkle 1.5s ease-in-out infinite', // Fast blink
+            },
+            keyframes: {
+              orbit: {
+                '0%': { transform: 'rotate(0deg)' },
+                '100%': { transform: 'rotate(360deg)' },
+              },
+              nebula: {
+                '0%': { backgroundPosition: '0% 0%' },
+                '100%': { backgroundPosition: '100% 100%' },
+              },
+              twinkle: {
+                '0%, 100%': { opacity: '0.2' },
+                '50%': { opacity: '0.9' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #0B0D17;
+        color: #ffffff;
+        overflow: hidden; /* Prevent scroll on the main body to handle it in app */
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #151932; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #38bdf8; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #0ea5e9; 
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
